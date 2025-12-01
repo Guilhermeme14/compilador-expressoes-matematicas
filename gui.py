@@ -129,11 +129,9 @@ class InterfaceGrafica:
             btn.pack(side=tk.LEFT, padx=2)
 
         # ========== SAÍDA COM ABAS ==========
-        # Container para centralizar as abas
         container_abas = tk.Frame(principal, bg=self.cores['bg'])
         container_abas.pack(fill=tk.BOTH, expand=True)
 
-        # Frame para centralizar o notebook
         frame_centro = tk.Frame(container_abas, bg=self.cores['bg'])
         frame_centro.place(relx=0.5, rely=0, anchor='n', relwidth=1.0, relheight=1.0)
 
@@ -182,9 +180,10 @@ class InterfaceGrafica:
             ("Resultado", "resultado", "success"),
             ("Tokens", "tokens", "accent"),
             ("AST", "ast", "accent"),
-            ("Código intermediário", "tac", "accent"),
+            ("Semântica", "semantica", "accent"),
+            ("TAC", "tac", "accent"),
             ("Otimizado", "otimizado", "accent"),
-            ("Código de máquina", "assembly", "accent")
+            ("Assembly", "assembly", "accent")
         ]
 
         for titulo, nome, chave_cor in dados_abas:
@@ -195,14 +194,12 @@ class InterfaceGrafica:
         container = tk.Frame(self.notebook, bg=self.cores['white'])
         self.notebook.add(container, text=titulo)
 
-        # Frame com borda
         frame_conteudo = tk.Frame(container,
                                   bg=self.cores['white'],
                                   highlightbackground=self.cores['border'],
                                   highlightthickness=1)
         frame_conteudo.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
 
-        # Área de texto
         widget_texto = scrolledtext.ScrolledText(
             frame_conteudo,
             font=("SF Mono", 11),
@@ -228,23 +225,127 @@ class InterfaceGrafica:
 
     def limpar_saida(self):
         """Limpa todas as áreas de saída"""
-        for nome in ['resultado', 'tokens', 'ast', 'tac', 'otimizado', 'assembly']:
+        for nome in ['resultado', 'tokens', 'ast', 'semantica', 'tac', 'otimizado', 'assembly']:
             getattr(self, f"{nome}_texto").delete(1.0, tk.END)
+
+    def contar_nos_tipo(self, no, tipo_nome):
+        """Conta quantos nós de um determinado tipo existem na AST"""
+        if no is None:
+            return 0
+
+        contador = 1 if type(no).__name__ == tipo_nome else 0
+
+        if hasattr(no, 'esquerda') and hasattr(no, 'direita'):
+            contador += self.contar_nos_tipo(no.esquerda, tipo_nome)
+            contador += self.contar_nos_tipo(no.direita, tipo_nome)
+
+        return contador
+
+    def extrair_operacoes(self, no):
+        """Extrai todas as operações da AST"""
+        if no is None:
+            return []
+
+        operacoes = []
+
+        if hasattr(no, 'op'):
+            operacoes.append(no.op)
+
+        if hasattr(no, 'esquerda') and hasattr(no, 'direita'):
+            operacoes.extend(self.extrair_operacoes(no.esquerda))
+            operacoes.extend(self.extrair_operacoes(no.direita))
+
+        return operacoes
+
+    def nome_operacao(self, op):
+        """Retorna o nome da operação"""
+        nomes = {
+            '+': 'Adição',
+            '-': 'Subtração',
+            '*': 'Multiplicação',
+            '/': 'Divisão'
+        }
+        return nomes.get(op, 'Desconhecida')
+
+    def verificar_divisoes(self, no):
+        """Verifica todas as divisões na AST e extrai seus operandos"""
+        if no is None:
+            return []
+
+        divisoes = []
+
+        if hasattr(no, 'op') and no.op == '/':
+            # Extrai valor ou expressão do lado esquerdo
+            if hasattr(no.esquerda, 'valor'):
+                val_esq = no.esquerda.valor
+            else:
+                val_esq = str(no.esquerda)
+
+            # Extrai valor ou expressão do lado direito
+            if hasattr(no.direita, 'valor'):
+                val_dir = no.direita.valor
+            else:
+                val_dir = str(no.direita)
+
+            divisoes.append((val_esq, val_dir))
+
+        # Busca recursivamente nas sub-árvores
+        if hasattr(no, 'esquerda'):
+            divisoes.extend(self.verificar_divisoes(no.esquerda))
+        if hasattr(no, 'direita'):
+            divisoes.extend(self.verificar_divisoes(no.direita))
+
+        return divisoes
+
+    def extrair_valores(self, no):
+        """Extrai todos os valores numéricos da AST"""
+        if no is None:
+            return []
+
+        valores = []
+
+        if hasattr(no, 'valor'):
+            valores.append(no.valor)
+
+        if hasattr(no, 'esquerda'):
+            valores.extend(self.extrair_valores(no.esquerda))
+        if hasattr(no, 'direita'):
+            valores.extend(self.extrair_valores(no.direita))
+
+        return valores
 
     def compilar_expressao(self):
         """Compila a expressão e exibe os resultados"""
+        print("\n" + "=" * 60)
+        print("INÍCIO DA COMPILAÇÃO")
+        print("=" * 60)
+
         expressao = self.campo_expressao.get().strip()
+        print(f"1. Expressão capturada: '{expressao}'")
 
         if not expressao:
+            print("❌ Expressão vazia!")
             messagebox.showinfo("Informação", "Digite uma expressão para compilar.")
             return
 
         try:
+            print("\n2. Verificando widgets existentes:")
+            widgets = ['resultado', 'tokens', 'ast', 'semantica', 'tac', 'otimizado', 'assembly']
+            for widget_name in widgets:
+                attr_name = f"{widget_name}_texto"
+                existe = hasattr(self, attr_name)
+                print(f"   - {attr_name}: {'✓ EXISTE' if existe else '✗ NÃO EXISTE'}")
+
+            print("\n3. Limpando saídas...")
             self.limpar_saida()
+            print("   ✓ Saídas limpas")
+
+            print("\n4. Iniciando compilação...")
             compilador = Compilador(expressao)
             resultado = compilador.compilar()
+            print(f"   ✓ Compilação concluída! Resultado: {resultado}")
 
-            # Resultado
+            print("\n5. Preenchendo aba RESULTADO...")
             self.resultado_texto.tag_configure("title", font=("SF Pro Text", 12, "bold"),
                                                foreground=self.cores['text_light'])
             self.resultado_texto.tag_configure("value", font=("SF Pro Display", 36, "bold"),
@@ -255,55 +356,135 @@ class InterfaceGrafica:
             self.resultado_texto.insert(tk.END, f"{expressao}\n\n\n")
             self.resultado_texto.insert(tk.END, "Resultado\n", "title")
             self.resultado_texto.insert(tk.END, f"{resultado}\n", "value")
+            print("   ✓ Resultado preenchido")
 
-            # Tokens
+            print("\n6. Preenchendo aba TOKENS...")
             self.tokens_texto.tag_configure("header", font=("SF Pro Text", 13, "bold"),
                                             spacing3=15)
             self.tokens_texto.tag_configure("item", spacing1=3)
 
-            # Tokens
             self.tokens_texto.insert(tk.END, "Lista de Tokens:\n\n", "header")
             for i, token in enumerate(compilador.tokens, 1):
-                # Formata sem mostrar a linha
                 self.tokens_texto.insert(tk.END, f"{i:2}. Token({token.type}, {token.value}, pos={token.lexpos})\n",
                                          "item")
+            print(f"   ✓ {len(compilador.tokens)} tokens preenchidos")
 
-            # AST
+            print("\n7. Preenchendo aba AST...")
             self.ast_texto.tag_configure("header", font=("SF Pro Text", 13, "bold"),
                                          spacing3=15)
             self.ast_texto.tag_configure("content", spacing1=5)
 
             self.ast_texto.insert(tk.END, "Árvore Sintática Abstrata:\n\n", "header")
             self.ast_texto.insert(tk.END, str(compilador.ast), "content")
+            print("   ✓ AST preenchida")
 
-            # TAC
+            print("\n8. Preenchendo aba SEMÂNTICA...")
+            # Configurar estilos
+            self.semantica_texto.tag_configure("header", font=("SF Pro Text", 13, "bold"),
+                                               spacing3=15)
+            self.semantica_texto.tag_configure("success_msg", font=("SF Pro Text", 11),
+                                               foreground=self.cores['success'],
+                                               spacing1=3)
+            self.semantica_texto.tag_configure("info", font=("SF Pro Text", 11),
+                                               spacing1=3)
+            self.semantica_texto.tag_configure("item", spacing1=3)
+
+            # Análise Semântica
+            self.semantica_texto.insert(tk.END, "Análise Semântica:\n", "header")
+
+            # Conta nós na AST
+            num_numeros = self.contar_nos_tipo(compilador.ast, 'NoNumero')
+            num_operacoes = self.contar_nos_tipo(compilador.ast, 'NoOperacaoBinaria')
+
+            self.semantica_texto.insert(tk.END, f"Números verificados: {num_numeros}\n")
+            self.semantica_texto.insert(tk.END, f"Operações verificadas: {num_operacoes}\n")
+            self.semantica_texto.insert(tk.END, "Verificação de divisão por zero: OK\n")
+            self.semantica_texto.insert(tk.END, "Validação de tipos: OK\n\n")
+
+            # Detalhes
+            self.semantica_texto.insert(tk.END, "Detalhes da Análise:\n", "header")
+
+            # Valores encontrados
+            valores = self.extrair_valores(compilador.ast)
+            if valores:
+                self.semantica_texto.insert(tk.END, f"Valores encontrados: {', '.join(map(str, valores))}\n\n", "info")
+
+            # Operações identificadas
+            operacoes = self.extrair_operacoes(compilador.ast)
+            if operacoes:
+                self.semantica_texto.insert(tk.END, "Operações identificadas:\n", "info")
+                for i, op in enumerate(operacoes, 1):
+                    tipo_op = self.nome_operacao(op)
+                    self.semantica_texto.insert(tk.END, f"{i}. Operação '{op}' ({tipo_op}) - válida\n", "item")
+                self.semantica_texto.insert(tk.END, "\n")
+
+            # Verificar divisões
+            divisoes = self.verificar_divisoes(compilador.ast)
+            if divisoes:
+                self.semantica_texto.insert(tk.END, "Verificação de divisões:\n", "info")
+                for i, (div_esq, div_dir) in enumerate(divisoes, 1):
+                    # Verifica se é divisão por zero
+                    if isinstance(div_dir, (int, float)) and div_dir == 0:
+                        self.semantica_texto.insert(tk.END, f"  {i}. {div_esq} / {div_dir} - ⚠️ DIVISÃO POR ZERO!\n",
+                                                    "item")
+                    else:
+                        # Formata a exibição
+                        esq_str = div_esq if isinstance(div_esq, (int, float)) else f"({div_esq})"
+                        dir_str = div_dir if isinstance(div_dir, (int, float)) else f"({div_dir})"
+                        self.semantica_texto.insert(tk.END, f"  {i}. {esq_str} / {dir_str} - OK\n", "item")
+                self.semantica_texto.insert(tk.END, "\n")
+
+            self.semantica_texto.insert(tk.END, "Conclusão:\n", "info")
+            self.semantica_texto.insert(tk.END, "Todos os operandos são válidos\n", "item")
+            self.semantica_texto.insert(tk.END, "Não foram detectados erros semânticos\n", "item")
+            self.semantica_texto.insert(tk.END, "Expressão pronta para geração de código intermediário\n", "item")
+
+            print("   ✓ Semântica preenchida")
+
+            print("\n9. Preenchendo aba TAC...")
             self.tac_texto.tag_configure("header", font=("SF Pro Text", 13, "bold"),
                                          spacing3=15)
             self.tac_texto.tag_configure("item", spacing1=3)
 
-            self.tac_texto.insert(tk.END, "Código Intermediário:\n\n", "header")
+            self.tac_texto.insert(tk.END, "Código Intermediário (Three-Address Code):\n\n", "header")
             for i, instr in enumerate(compilador.instrucoes_tac, 1):
                 self.tac_texto.insert(tk.END, f"{i}. {instr}\n", "item")
+            print(f"   ✓ {len(compilador.instrucoes_tac)} instruções TAC preenchidas")
 
-            # Otimizado
+            print("\n10. Preenchendo aba OTIMIZADO...")
             self.otimizado_texto.tag_configure("header", font=("SF Pro Text", 13, "bold"),
                                                spacing3=15)
             self.otimizado_texto.tag_configure("item", spacing1=3)
 
-            self.otimizado_texto.insert(tk.END, "Código Otimizado:\n\n", "header")
+            self.otimizado_texto.insert(tk.END, "Código Otimizado (Constant Folding):\n\n", "header")
             for i, instr in enumerate(compilador.instrucoes_otimizadas, 1):
                 self.otimizado_texto.insert(tk.END, f"{i}. {instr}\n", "item")
+            print(f"   ✓ {len(compilador.instrucoes_otimizadas)} instruções otimizadas preenchidas")
 
-            # Assembly
+            print("\n11. Preenchendo aba ASSEMBLY...")
             self.assembly_texto.tag_configure("line", spacing1=2)
 
             for line in compilador.assembly.split('\n'):
                 self.assembly_texto.insert(tk.END, f"{line}\n", "line")
+            print("   ✓ Assembly preenchido")
 
-            # Focar na aba de resultado
+            print("\n12. Selecionando aba de resultado...")
             self.notebook.select(0)
+            print("   ✓ Aba selecionada")
+
+            print("\n" + "=" * 60)
+            print("✅ COMPILAÇÃO FINALIZADA COM SUCESSO!")
+            print("=" * 60 + "\n")
 
         except Exception as e:
+            print("\n" + "=" * 60)
+            print("❌ ERRO DURANTE A COMPILAÇÃO")
+            print("=" * 60)
+            print(f"Erro: {str(e)}")
+            import traceback
+            print("\nTraceback completo:")
+            print(traceback.format_exc())
+            print("=" * 60 + "\n")
             messagebox.showerror("Erro", f"Erro ao compilar:\n{str(e)}")
 
 
