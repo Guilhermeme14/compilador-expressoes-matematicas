@@ -182,9 +182,9 @@ class InterfaceGrafica:
             ("Resultado", "resultado", "success"),
             ("Tokens", "tokens", "accent"),
             ("AST", "ast", "accent"),
-            ("TAC", "tac", "accent"),
+            ("Código intermediário", "tac", "accent"),
             ("Otimizado", "otimizado", "accent"),
-            ("Assembly", "assembly", "accent")
+            ("Código de máquina", "assembly", "accent")
         ]
 
         for titulo, nome, chave_cor in dados_abas:
@@ -281,7 +281,7 @@ class InterfaceGrafica:
                                          spacing3=15)
             self.tac_texto.tag_configure("item", spacing1=3)
 
-            self.tac_texto.insert(tk.END, "Código Intermediário (Three-Address Code):\n\n", "header")
+            self.tac_texto.insert(tk.END, "Código Intermediário:\n\n", "header")
             for i, instr in enumerate(compilador.instrucoes_tac, 1):
                 self.tac_texto.insert(tk.END, f"{i}. {instr}\n", "item")
 
@@ -290,7 +290,7 @@ class InterfaceGrafica:
                                                spacing3=15)
             self.otimizado_texto.tag_configure("item", spacing1=3)
 
-            self.otimizado_texto.insert(tk.END, "Código Otimizado (Constant Folding):\n\n", "header")
+            self.otimizado_texto.insert(tk.END, "Código Otimizado:\n\n", "header")
             for i, instr in enumerate(compilador.instrucoes_otimizadas, 1):
                 self.otimizado_texto.insert(tk.END, f"{i}. {instr}\n", "item")
 
