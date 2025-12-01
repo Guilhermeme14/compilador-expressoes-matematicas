@@ -181,9 +181,9 @@ class InterfaceGrafica:
             ("Tokens", "tokens", "accent"),
             ("AST", "ast", "accent"),
             ("Semântica", "semantica", "accent"),
-            ("TAC", "tac", "accent"),
+            ("Código Intermediário", "tac", "accent"),
             ("Otimizado", "otimizado", "accent"),
-            ("Assembly", "assembly", "accent")
+            ("Código de Máquina", "assembly", "accent")
         ]
 
         for titulo, nome, chave_cor in dados_abas:
@@ -425,13 +425,13 @@ class InterfaceGrafica:
                 for i, (div_esq, div_dir) in enumerate(divisoes, 1):
                     # Verifica se é divisão por zero
                     if isinstance(div_dir, (int, float)) and div_dir == 0:
-                        self.semantica_texto.insert(tk.END, f"  {i}. {div_esq} / {div_dir} - ⚠️ DIVISÃO POR ZERO!\n",
+                        self.semantica_texto.insert(tk.END, f"{i}. {div_esq} / {div_dir} - ⚠️ DIVISÃO POR ZERO!\n",
                                                     "item")
                     else:
                         # Formata a exibição
                         esq_str = div_esq if isinstance(div_esq, (int, float)) else f"({div_esq})"
                         dir_str = div_dir if isinstance(div_dir, (int, float)) else f"({div_dir})"
-                        self.semantica_texto.insert(tk.END, f"  {i}. {esq_str} / {dir_str} - OK\n", "item")
+                        self.semantica_texto.insert(tk.END, f"{i}. {esq_str} / {dir_str} - OK\n", "item")
                 self.semantica_texto.insert(tk.END, "\n")
 
             self.semantica_texto.insert(tk.END, "Conclusão:\n", "info")
