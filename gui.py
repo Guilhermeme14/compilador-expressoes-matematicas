@@ -261,9 +261,12 @@ class InterfaceGrafica:
                                             spacing3=15)
             self.tokens_texto.tag_configure("item", spacing1=3)
 
+            # Tokens
             self.tokens_texto.insert(tk.END, "Lista de Tokens:\n\n", "header")
             for i, token in enumerate(compilador.tokens, 1):
-                self.tokens_texto.insert(tk.END, f"{i:2}. {token}\n", "item")
+                # Formata sem mostrar a linha
+                self.tokens_texto.insert(tk.END, f"{i:2}. Token({token.type}, {token.value}, pos={token.lexpos})\n",
+                                         "item")
 
             # AST
             self.ast_texto.tag_configure("header", font=("SF Pro Text", 13, "bold"),
