@@ -1,70 +1,64 @@
+import ply.yacc as yacc
 from lexico.analisador_lexico import AnalisadorLexico
-from lexico.tipos_token import TipoToken
 from .nos_ast import NoNumero, NoOperacaoBinaria
 
 
 class AnalisadorSintatico:
-    """Analisador Sintático - constrói a AST"""
+    """Analisador Sintático - usa PLY para parsing"""
 
-    def __init__(self, analisador_lexico: AnalisadorLexico):
-        self.analisador_lexico = analisador_lexico
-        self.token_atual = self.analisador_lexico.obter_proximo_token()
+    # Obtém os tokens do lexer
+    tokens = AnalisadorLexico.tokens
 
-    def erro(self):
-        raise Exception(f"Erro de sintaxe: token inesperado {self.token_atual}")
+    # Define a precedência e associatividade dos operadores
+    precedence = (
+        ('left', 'MAIS', 'MENOS'),
+        ('left', 'VEZES', 'DIVIDIR'),
+    )
 
-    def consumir(self, tipo_token: TipoToken):
-        """Consome um token do tipo esperado"""
-        if self.token_atual.tipo == tipo_token:
-            self.token_atual = self.analisador_lexico.obter_proximo_token()
+    def __init__(self):
+        self.analisador_lexico = AnalisadorLexico()
+        self.parser = yacc.yacc(module=self, debug=False, write_tables=False)
+        self.ast = None
+
+    # Regras gramaticais
+    def p_expressao(self, p):
+        """expressao : termo"""
+        p[0] = p[1]
+
+    def p_expressao_binaria(self, p):
+        """expressao : expressao MAIS expressao
+                     | expressao MENOS expressao"""
+        p[0] = NoOperacaoBinaria(p[2], p[1], p[3])
+
+    def p_termo_binario(self, p):
+        """termo : termo VEZES termo
+                 | termo DIVIDIR termo"""
+        p[0] = NoOperacaoBinaria(p[2], p[1], p[3])
+
+    def p_termo_fator(self, p):
+        """termo : fator"""
+        p[0] = p[1]
+
+    def p_fator_numero(self, p):
+        """fator : NUMERO"""
+        p[0] = NoNumero(p[1])
+
+    def p_fator_parenteses(self, p):
+        """fator : PAREN_ESQ expressao PAREN_DIR"""
+        p[0] = p[2]
+
+    def p_error(self, p):
+        if p:
+            raise Exception(f"Erro de sintaxe no token '{p.value}' na posição {p.lexpos}")
         else:
-            self.erro()
+            raise Exception("Erro de sintaxe: fim inesperado da expressão")
 
-    def fator(self):
-        """fator : NUMERO | PAREN_ESQ expressao PAREN_DIR"""
-        token = self.token_atual
+    def analisar(self, texto):
+        """Analisa o texto e retorna a AST"""
+        lexer = self.analisador_lexico.obter_lexer()
+        self.ast = self.parser.parse(texto, lexer=lexer)
+        return self.ast
 
-        if token.tipo == TipoToken.NUMERO:
-            self.consumir(TipoToken.NUMERO)
-            return NoNumero(token)
-        elif token.tipo == TipoToken.PAREN_ESQ:
-            self.consumir(TipoToken.PAREN_ESQ)
-            no = self.expressao()
-            self.consumir(TipoToken.PAREN_DIR)
-            return no
-
-        self.erro()
-
-    def termo(self):
-        """termo : fator ((MULTIPLICAR | DIVIDIR) fator)*"""
-        no = self.fator()
-
-        while self.token_atual.tipo in (TipoToken.MULTIPLICAR, TipoToken.DIVIDIR):
-            token = self.token_atual
-            if token.tipo == TipoToken.MULTIPLICAR:
-                self.consumir(TipoToken.MULTIPLICAR)
-            elif token.tipo == TipoToken.DIVIDIR:
-                self.consumir(TipoToken.DIVIDIR)
-
-            no = NoOperacaoBinaria(esquerda=no, op=token, direita=self.fator())
-
-        return no
-
-    def expressao(self):
-        """expressao : termo ((MAIS | MENOS) termo)*"""
-        no = self.termo()
-
-        while self.token_atual.tipo in (TipoToken.MAIS, TipoToken.MENOS):
-            token = self.token_atual
-            if token.tipo == TipoToken.MAIS:
-                self.consumir(TipoToken.MAIS)
-            elif token.tipo == TipoToken.MENOS:
-                self.consumir(TipoToken.MENOS)
-
-            no = NoOperacaoBinaria(esquerda=no, op=token, direita=self.termo())
-
-        return no
-
-    def analisar(self):
-        """Inicia a análise sintática"""
-        return self.expressao()
+    def obter_tokens(self):
+        """Retorna a lista de tokens gerados"""
+        return self.analisador_lexico.tokens_list

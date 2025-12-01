@@ -1,5 +1,3 @@
-from lexico.analisador_lexico import AnalisadorLexico
-from lexico.tipos_token import TipoToken
 from sintatico.analisador_sintatico import AnalisadorSintatico
 from semantico.analisador_semantico import AnalisadorSemantico
 from geracao_codigo.gerador_tac import GeradorTAC
@@ -9,8 +7,6 @@ from interpretador import Interpretador
 
 
 class Compilador:
-    """Compilador completo - integra todas as etapas"""
-
     def __init__(self, codigo_fonte: str):
         self.codigo_fonte = codigo_fonte
         self.tokens = []
@@ -21,23 +17,17 @@ class Compilador:
         self.resultado = None
 
     def compilar(self):
-        """Executa todas as etapas da compilação"""
-        # 1. Análise Léxica
-        analisador_lexico = AnalisadorLexico(self.codigo_fonte)
-        while True:
-            token = analisador_lexico.obter_proximo_token()
-            self.tokens.append(token)
-            if token.tipo == TipoToken.FIM:
-                break
+        # 1 & 2. Análise Léxica e Sintática (integradas no PLY)
+        analisador = AnalisadorSintatico()
+        self.ast = analisador.analisar(self.codigo_fonte)
 
-        # 2. Análise Sintática
-        analisador_lexico = AnalisadorLexico(self.codigo_fonte)
-        analisador_sintatico = AnalisadorSintatico(analisador_lexico)
-        self.ast = analisador_sintatico.analisar()
+        # Tokenizar para exibição
+        analisador.analisador_lexico.tokenizar(self.codigo_fonte)
+        self.tokens = analisador.analisador_lexico.tokens_list
 
         # 3. Análise Semântica
-        analisador = AnalisadorSemantico()
-        analisador.visitar(self.ast)
+        analisador_semantico = AnalisadorSemantico()
+        analisador_semantico.visitar(self.ast)
 
         # 4. Geração de Código Intermediário
         gerador_tac = GeradorTAC()

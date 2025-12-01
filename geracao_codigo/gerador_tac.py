@@ -1,6 +1,5 @@
 from typing import List
 from sintatico.nos_ast import NoAST, NoNumero, NoOperacaoBinaria
-from lexico.tipos_token import TipoToken
 
 
 class InstrucaoTAC:
@@ -45,14 +44,7 @@ class GeradorTAC:
         direita = self.visitar(no.direita)
 
         temp = self.novo_temp()
-        mapa_op = {
-            TipoToken.MAIS: '+',
-            TipoToken.MENOS: '-',
-            TipoToken.MULTIPLICAR: '*',
-            TipoToken.DIVIDIR: '/'
-        }
-
-        instrucao = InstrucaoTAC(mapa_op[no.op.tipo], esquerda, direita, temp)
+        instrucao = InstrucaoTAC(no.op, esquerda, direita, temp)
         self.instrucoes.append(instrucao)
 
         return temp

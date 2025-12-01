@@ -1,9 +1,7 @@
 from sintatico.nos_ast import NoAST, NoNumero, NoOperacaoBinaria
-from lexico.tipos_token import TipoToken
 
 
 class Interpretador:
-    """Interpretador - executa a AST e retorna o resultado"""
 
     def visitar(self, no: NoAST):
         nome_metodo = f'visitar_{type(no).__name__}'
@@ -17,13 +15,13 @@ class Interpretador:
         esquerda = self.visitar(no.esquerda)
         direita = self.visitar(no.direita)
 
-        if no.op.tipo == TipoToken.MAIS:
+        if no.op == '+':
             return esquerda + direita
-        elif no.op.tipo == TipoToken.MENOS:
+        elif no.op == '-':
             return esquerda - direita
-        elif no.op.tipo == TipoToken.MULTIPLICAR:
+        elif no.op == '*':
             return esquerda * direita
-        elif no.op.tipo == TipoToken.DIVIDIR:
+        elif no.op == '/':
             if direita == 0:
                 raise Exception("Erro: Divisão por zero")
             return esquerda / direita

@@ -1,5 +1,4 @@
 from sintatico.nos_ast import NoAST, NoNumero, NoOperacaoBinaria
-from lexico.tipos_token import TipoToken
 
 
 class AnalisadorSemantico:
@@ -20,8 +19,8 @@ class AnalisadorSemantico:
         self.visitar(no.esquerda)
         self.visitar(no.direita)
 
-        if no.op.tipo == TipoToken.DIVIDIR:
-            if isinstance(no.direita, NoNumero) and no.direita.valor == 0:
-                raise Exception("Erro semântico: Divisão por zero detectada")
+        # Verifica divisão por zero em tempo de compilação
+        if no.op == '/' and isinstance(no.direita, NoNumero) and no.direita.valor == 0:
+            raise Exception("Erro semântico: Divisão por zero detectada")
 
         return True

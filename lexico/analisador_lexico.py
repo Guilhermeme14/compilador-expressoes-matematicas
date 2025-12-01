@@ -1,81 +1,61 @@
-from .tipos_token import Token, TipoToken
+import ply.lex as lex
 
 
 class AnalisadorLexico:
-    """Analisador Léxico - converte código fonte em tokens"""
+    """Analisador Léxico - usa PLY para tokenização"""
 
-    def __init__(self, texto: str):
-        self.texto = texto
-        self.posicao = 0
-        self.caractere_atual = self.texto[0] if texto else None
+    # Lista de nomes de tokens
+    tokens = (
+        'NUMERO',
+        'MAIS',
+        'MENOS',
+        'VEZES',
+        'DIVIDIR',
+        'PAREN_ESQ',
+        'PAREN_DIR',
+    )
 
-    def erro(self):
-        raise Exception(f"Caractere inválido na posição {self.posicao}: '{self.caractere_atual}'")
+    # Regras de tokens simples
+    t_MAIS = r'\+'
+    t_MENOS = r'-'
+    t_VEZES = r'\*'
+    t_DIVIDIR = r'/'
+    t_PAREN_ESQ = r'\('
+    t_PAREN_DIR = r'\)'
 
-    def avancar(self):
-        """Move para o próximo caractere"""
-        self.posicao += 1
-        if self.posicao >= len(self.texto):
-            self.caractere_atual = None
-        else:
-            self.caractere_atual = self.texto[self.posicao]
+    # Regra para números (inteiros e decimais)
+    def t_NUMERO(self, t):
+        r'\d+(\.\d+)?'
+        t.value = float(t.value) if '.' in t.value else int(t.value)
+        return t
 
-    def pular_espacos(self):
-        """Ignora espaços em branco"""
-        while self.caractere_atual is not None and self.caractere_atual.isspace():
-            self.avancar()
+    # Ignora espaços e tabs
+    t_ignore = ' \t'
 
-    def numero(self):
-        """Reconhece números (inteiros e decimais)"""
-        num_str = ''
-        pos_inicial = self.posicao
+    # Ignora quebras de linha
+    def t_newline(self, t):
+        r'\n+'
+        t.lexer.lineno += len(t.value)
 
-        while self.caractere_atual is not None and (self.caractere_atual.isdigit() or self.caractere_atual == '.'):
-            num_str += self.caractere_atual
-            self.avancar()
+    # Tratamento de erros
+    def t_error(self, t):
+        raise Exception(f"Caractere inválido '{t.value[0]}' na posição {t.lexpos}")
 
-        return Token(TipoToken.NUMERO, float(num_str) if '.' in num_str else int(num_str), pos_inicial)
+    def __init__(self):
+        self.lexer = lex.lex(module=self)
+        self.tokens_list = []
 
-    def obter_proximo_token(self):
-        """Retorna o próximo token da entrada"""
-        while self.caractere_atual is not None:
-            if self.caractere_atual.isspace():
-                self.pular_espacos()
-                continue
+    def tokenizar(self, texto):
+        self.tokens_list = []
+        self.lexer.input(texto)
 
-            if self.caractere_atual.isdigit():
-                return self.numero()
+        while True:
+            tok = self.lexer.token()
+            if not tok:
+                break
+            self.tokens_list.append(tok)
 
-            if self.caractere_atual == '+':
-                token = Token(TipoToken.MAIS, '+', self.posicao)
-                self.avancar()
-                return token
+        return self.tokens_list
 
-            if self.caractere_atual == '-':
-                token = Token(TipoToken.MENOS, '-', self.posicao)
-                self.avancar()
-                return token
-
-            if self.caractere_atual == '*':
-                token = Token(TipoToken.MULTIPLICAR, '*', self.posicao)
-                self.avancar()
-                return token
-
-            if self.caractere_atual == '/':
-                token = Token(TipoToken.DIVIDIR, '/', self.posicao)
-                self.avancar()
-                return token
-
-            if self.caractere_atual == '(':
-                token = Token(TipoToken.PAREN_ESQ, '(', self.posicao)
-                self.avancar()
-                return token
-
-            if self.caractere_atual == ')':
-                token = Token(TipoToken.PAREN_DIR, ')', self.posicao)
-                self.avancar()
-                return token
-
-            self.erro()
-
-        return Token(TipoToken.FIM, None, self.posicao)
+    def obter_lexer(self):
+        return self.lexer
