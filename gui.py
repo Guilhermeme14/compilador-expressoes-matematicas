@@ -446,7 +446,7 @@ class InterfaceGrafica:
                                          spacing3=15)
             self.tac_texto.tag_configure("item", spacing1=3)
 
-            self.tac_texto.insert(tk.END, "Código Intermediário (Three-Address Code):\n\n", "header")
+            self.tac_texto.insert(tk.END, "Código Intermediário:\n\n", "header")
             for i, instr in enumerate(compilador.instrucoes_tac, 1):
                 self.tac_texto.insert(tk.END, f"{i}. {instr}\n", "item")
             print(f"   ✓ {len(compilador.instrucoes_tac)} instruções TAC preenchidas")
@@ -456,7 +456,7 @@ class InterfaceGrafica:
                                                spacing3=15)
             self.otimizado_texto.tag_configure("item", spacing1=3)
 
-            self.otimizado_texto.insert(tk.END, "Código Otimizado (Constant Folding):\n\n", "header")
+            self.otimizado_texto.insert(tk.END, "Código Otimizado:\n\n", "header")
             for i, instr in enumerate(compilador.instrucoes_otimizadas, 1):
                 self.otimizado_texto.insert(tk.END, f"{i}. {instr}\n", "item")
             print(f"   ✓ {len(compilador.instrucoes_otimizadas)} instruções otimizadas preenchidas")
