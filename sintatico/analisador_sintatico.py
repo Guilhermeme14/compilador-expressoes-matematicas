@@ -4,12 +4,7 @@ from .nos_ast import NoNumero, NoOperacaoBinaria
 
 
 class AnalisadorSintatico:
-    """Analisador Sintático - usa PLY para parsing"""
-
-    # Obtém os tokens do lexer
     tokens = AnalisadorLexico.tokens
-
-    # Define a precedência e associatividade dos operadores
     precedence = (
         ('left', 'MAIS', 'MENOS'),
         ('left', 'VEZES', 'DIVIDIR'),
@@ -54,11 +49,9 @@ class AnalisadorSintatico:
             raise Exception("Erro de sintaxe: fim inesperado da expressão")
 
     def analisar(self, texto):
-        """Analisa o texto e retorna a AST"""
         lexer = self.analisador_lexico.obter_lexer()
         self.ast = self.parser.parse(texto, lexer=lexer)
         return self.ast
 
     def obter_tokens(self):
-        """Retorna a lista de tokens gerados"""
         return self.analisador_lexico.tokens_list

@@ -3,13 +3,10 @@ from .gerador_tac import InstrucaoTAC
 
 
 class Otimizador:
-    """Otimizador de código - constant folding e eliminação de código morto"""
-
     def __init__(self, instrucoes: List[InstrucaoTAC]):
         self.instrucoes = instrucoes
 
     def dobramento_constantes(self):
-        """Avalia operações constantes em tempo de compilação"""
         otimizado = []
 
         for instr in self.instrucoes:
@@ -30,5 +27,4 @@ class Otimizador:
         return otimizado
 
     def otimizar(self):
-        """Aplica todas as otimizações"""
         return self.dobramento_constantes()

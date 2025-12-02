@@ -2,8 +2,6 @@ from sintatico.nos_ast import NoAST, NoNumero, NoOperacaoBinaria
 
 
 class AnalisadorSemantico:
-    """Analisador Semântico - verifica a validade das operações"""
-
     def visitar(self, no: NoAST):
         nome_metodo = f'visitar_{type(no).__name__}'
         visitador = getattr(self, nome_metodo, self.visita_generica)
@@ -19,7 +17,6 @@ class AnalisadorSemantico:
         self.visitar(no.esquerda)
         self.visitar(no.direita)
 
-        # Verifica divisão por zero em tempo de compilação
         if no.op == '/' and isinstance(no.direita, NoNumero) and no.direita.valor == 0:
             raise Exception("Erro semântico: Divisão por zero detectada")
 

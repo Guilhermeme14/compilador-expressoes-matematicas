@@ -3,14 +3,11 @@ from .gerador_tac import InstrucaoTAC
 
 
 class GeradorCodigo:
-    """Gerador de Código de Máquina Simplificado (Assembly-like)"""
-
     def __init__(self, instrucoes: List[InstrucaoTAC]):
         self.instrucoes = instrucoes
         self.assembly = []
 
     def gerar(self):
-        """Gera código assembly simplificado"""
         self.assembly.append("; Código Assembly Gerado")
         self.assembly.append("; " + "=" * 40)
 

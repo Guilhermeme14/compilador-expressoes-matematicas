@@ -3,8 +3,6 @@ from sintatico.nos_ast import NoAST, NoNumero, NoOperacaoBinaria
 
 
 class InstrucaoTAC:
-    """Instrução de Código de Três Endereços"""
-
     def __init__(self, op: str, arg1, arg2, resultado):
         self.op = op
         self.arg1 = arg1
@@ -19,14 +17,11 @@ class InstrucaoTAC:
 
 
 class GeradorTAC:
-    """Gerador de Código Intermediário"""
-
     def __init__(self):
         self.instrucoes = []
         self.contador_temp = 0
 
     def novo_temp(self):
-        """Cria uma nova variável temporária"""
         temp = f"t{self.contador_temp}"
         self.contador_temp += 1
         return temp

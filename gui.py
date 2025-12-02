@@ -4,14 +4,12 @@ from compilador import Compilador
 
 
 class InterfaceGrafica:
-    """Interface Gráfica Minimalista para o Compilador"""
 
     def __init__(self, raiz):
         self.raiz = raiz
         self.raiz.title("Compilador de Expressões")
         self.raiz.geometry("1100x650")
 
-        # Paleta minimalista
         self.cores = {
             'bg': '#f5f5f7',
             'white': '#ffffff',

@@ -2,7 +2,6 @@ from enum import Enum
 
 
 class TipoToken(Enum):
-    """Tipos de tokens reconhecidos pelo compilador"""
     NUMERO = "NUMERO"
     MAIS = "MAIS"
     MENOS = "MENOS"
@@ -14,7 +13,6 @@ class TipoToken(Enum):
 
 
 class Token:
-    """Representa um token (unidade léxica)"""
 
     def __init__(self, tipo: TipoToken, valor: any, posicao: int):
         self.tipo = tipo
