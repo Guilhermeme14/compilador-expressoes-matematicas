@@ -8,8 +8,8 @@ class GeradorCodigo:
         self.assembly = []
 
     def gerar(self):
-        self.assembly.append("; Código Assembly Gerado")
-        self.assembly.append("; " + "=" * 40)
+        self.assembly.append("Código Assembly Gerado")
+        self.assembly.append(" ")
 
         for instr in self.instrucoes:
             if instr.arg2 is None:
