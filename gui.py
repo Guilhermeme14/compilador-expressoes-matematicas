@@ -38,12 +38,12 @@ class InterfaceGrafica:
         frame_esq = tk.Frame(frame_titulo, bg=self.cores['bg'])
         frame_esq.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        tk.Label(frame_esq, text="Compilador",
+        tk.Label(frame_esq, text="Compilador de expressões matemáticas",
                  font=("SF Pro Display", 32, "bold"),
                  bg=self.cores['bg'],
                  fg=self.cores['text']).pack(anchor=tk.W)
 
-        tk.Label(frame_esq, text="Analise expressões matemáticas passo a passo",
+        tk.Label(frame_esq, text="________________",
                  font=("SF Pro Text", 13),
                  bg=self.cores['bg'],
                  fg=self.cores['text_light']).pack(anchor=tk.W)
