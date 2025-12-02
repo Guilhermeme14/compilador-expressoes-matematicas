@@ -36,15 +36,32 @@ class InterfaceGrafica:
         frame_titulo = tk.Frame(principal, bg=self.cores['bg'])
         frame_titulo.pack(fill=tk.X, pady=(0, 30))
 
-        tk.Label(frame_titulo, text="Compilador",
+        # Lado esquerdo - título
+        frame_esq = tk.Frame(frame_titulo, bg=self.cores['bg'])
+        frame_esq.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        tk.Label(frame_esq, text="Compilador",
                  font=("SF Pro Display", 32, "bold"),
                  bg=self.cores['bg'],
                  fg=self.cores['text']).pack(anchor=tk.W)
 
-        tk.Label(frame_titulo, text="Analise expressões matemáticas passo a passo",
+        tk.Label(frame_esq, text="Analise expressões matemáticas passo a passo",
                  font=("SF Pro Text", 13),
                  bg=self.cores['bg'],
                  fg=self.cores['text_light']).pack(anchor=tk.W)
+
+        # Lado direito - Botão para mostrar tokens
+        btn_tokens = tk.Button(frame_titulo, text="Tokens Válidos",
+                               command=self.mostrar_tokens,
+                               bg=self.cores['bg'],
+                               fg=self.cores['text'],
+                               font=("SF Pro Text", 11),
+                               relief=tk.FLAT,
+                               bd=0,
+                               padx=25,
+                               pady=10,
+                               cursor='hand2')
+        btn_tokens.pack(side=tk.RIGHT, padx=(20, 0))
 
         # ========== ENTRADA ==========
         card_entrada = tk.Frame(principal, bg=self.cores['white'],
@@ -222,6 +239,137 @@ class InterfaceGrafica:
         """Define um exemplo no campo de entrada"""
         self.campo_expressao.delete(0, tk.END)
         self.campo_expressao.insert(0, exemplo)
+
+    def mostrar_tokens(self):
+        """Exibe uma janela popup com a tabela de tokens válidos"""
+        popup = tk.Toplevel(self.raiz)
+        popup.title("Tokens Válidos")
+        popup.geometry("750x500")
+        popup.configure(bg=self.cores['white'])
+        popup.resizable(False, False)
+
+        # Centralizar janela
+        popup.transient(self.raiz)
+        popup.grab_set()
+
+        # Container principal
+        container = tk.Frame(popup, bg=self.cores['white'])
+        container.pack(fill=tk.BOTH, expand=True, padx=30, pady=30)
+
+        # Título
+        tk.Label(container, text="Tokens Válidos do Compilador",
+                 font=("SF Pro Display", 20, "bold"),
+                 bg=self.cores['white'],
+                 fg=self.cores['text']).pack(pady=(0, 25))
+
+        # Frame da tabela
+        tabela_frame = tk.Frame(container, bg=self.cores['bg'],
+                                highlightbackground=self.cores['border'],
+                                highlightthickness=1)
+        tabela_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Cabeçalho
+        header = tk.Frame(tabela_frame, bg=self.cores['border'])
+        header.pack(fill=tk.X)
+
+        tk.Label(header, text="NOME DO TOKEN",
+                 font=("SF Pro Text", 11, "bold"),
+                 bg=self.cores['border'],
+                 fg=self.cores['text'],
+                 width=20,
+                 anchor=tk.W).pack(side=tk.LEFT, padx=20, pady=12)
+
+        tk.Label(header, text="SÍMBOLO / PADRÃO",
+                 font=("SF Pro Text", 11, "bold"),
+                 bg=self.cores['border'],
+                 fg=self.cores['text'],
+                 width=18,
+                 anchor=tk.CENTER).pack(side=tk.LEFT, padx=5, pady=12)
+
+        tk.Label(header, text="DESCRIÇÃO",
+                 font=("SF Pro Text", 11, "bold"),
+                 bg=self.cores['border'],
+                 fg=self.cores['text'],
+                 width=30,
+                 anchor=tk.W).pack(side=tk.LEFT, padx=5, pady=12)
+
+        # Corpo da tabela com scroll
+        canvas = tk.Canvas(tabela_frame, bg=self.cores['white'],
+                           highlightthickness=0)
+        scrollbar = tk.Scrollbar(tabela_frame, orient="vertical",
+                                 command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=self.cores['white'])
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Função para scroll com mouse
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        # Bind do scroll do mouse
+        canvas.bind_all("<MouseWheel>", on_mousewheel)
+
+        # Unbind quando fechar
+        popup.protocol("WM_DELETE_WINDOW", lambda: [canvas.unbind_all("<MouseWheel>"), popup.destroy()])
+
+        # Dados
+        tokens_data = [
+            ("NUMERO", "0-9 .", "Números inteiros ou decimais"),
+            ("MAIS", "+", "Operador de Adição"),
+            ("MENOS", "-", "Operador de Subtração"),
+            ("MULTIPLICAR", "*", "Operador de Multiplicação"),
+            ("DIVIDIR", "/", "Operador de Divisão"),
+            ("PAREN_ESQ", "(", "Abre Parênteses (Prioridade)"),
+            ("PAREN_DIR", ")", "Fecha Parênteses")
+        ]
+
+        for i, (nome, simbolo, desc) in enumerate(tokens_data):
+            bg_cor = self.cores['bg'] if i % 2 == 0 else self.cores['white']
+            linha = tk.Frame(scrollable_frame, bg=bg_cor)
+            linha.pack(fill=tk.X, pady=1)
+
+            tk.Label(linha, text=nome,
+                     font=("SF Mono", 11),
+                     bg=bg_cor,
+                     fg=self.cores['text'],
+                     width=20,
+                     anchor=tk.W).pack(side=tk.LEFT, padx=20, pady=12)
+
+            tk.Label(linha, text=simbolo,
+                     font=("SF Mono", 12, "bold"),
+                     bg=bg_cor,
+                     fg=self.cores['accent'],
+                     width=18,
+                     anchor=tk.CENTER).pack(side=tk.LEFT, padx=5, pady=12)
+
+            tk.Label(linha, text=desc,
+                     font=("SF Pro Text", 11),
+                     bg=bg_cor,
+                     fg=self.cores['text_light'],
+                     width=30,
+                     anchor=tk.W).pack(side=tk.LEFT, padx=5, pady=12)
+
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Botão fechar
+        btn_fechar = tk.Button(container, text="Fechar",
+                               command=lambda: [canvas.unbind_all("<MouseWheel>"), popup.destroy()],
+                               bg=self.cores['accent'],
+                               fg='white',
+                               font=("SF Pro Text", 11, "bold"),
+                               relief=tk.FLAT,
+                               bd=0,
+                               padx=40,
+                               pady=12,
+                               cursor='hand2')
+        btn_fechar.pack(pady=(25, 0))
 
     def limpar_saida(self):
         """Limpa todas as áreas de saída"""
